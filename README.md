@@ -2,11 +2,20 @@
 
 Hosted MCP (Model Context Protocol) server for downloading Figma images using access tokens.
 
-## Quick Start - Using the Hosted Service
+## Quick Start
 
-The easiest way to use tr-figma-mcpserver is through our hosted Azure deployment. No installation required!
+### 1. Install the Package
 
-### 1. Get Your Figma Access Token
+```bash
+npm install -g @somnathroy/tr-figma-mcpserver
+```
+
+Or use with npx (no installation):
+```bash
+npx @somnathroy/tr-figma-mcpserver
+```
+
+### 2. Get Your Figma Access Token
 
 1. Go to [Figma Settings](https://www.figma.com/settings)
 2. Scroll to "Personal access tokens"
@@ -14,18 +23,16 @@ The easiest way to use tr-figma-mcpserver is through our hosted Azure deployment
 4. Give it a name (e.g., "MCP Server")
 5. Copy the token (format: `figd_...`)
 
-### 2. Configure Your MCP Client
+### 3. Configure Your MCP Client
 
-**Method 1: Local Stdio (Recommended)**
+Create `.mcp.json` in your project root or add to your MCP client config:
 
-Create `.mcp.json` in your project root or VS Code workspace:
-
+**Using installed package:**
 ```json
 {
   "mcpServers": {
     "tr-figma-mcpserver": {
-      "command": "node",
-      "args": ["C:/Users/YOUR_USERNAME/path/to/tr-figma-mcpserver/dist/index.js"],
+      "command": "tr-figma-mcpserver",
       "env": {
         "MCP_STDIO": "true",
         "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
@@ -35,17 +42,15 @@ Create `.mcp.json` in your project root or VS Code workspace:
 }
 ```
 
-**Replace the path** with the absolute path to where you have tr-figma-mcpserver installed.
-
-**Method 2: Hosted SSE (Experimental - Not Yet Supported by Most Clients)**
-
+**Using npx (no installation):**
 ```json
 {
   "mcpServers": {
     "tr-figma-mcpserver": {
-      "url": "https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/mcp",
-      "transport": "sse",
+      "command": "npx",
+      "args": ["-y", "@somnathroy/tr-figma-mcpserver"],
       "env": {
+        "MCP_STDIO": "true",
         "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
       }
     }
@@ -53,20 +58,18 @@ Create `.mcp.json` in your project root or VS Code workspace:
 }
 ```
 
-*Note: SSE transport support varies by MCP client. Use Method 1 for guaranteed compatibility.*
-
 **Configuration Locations:**
 - **VS Code / Cursor:** `.mcp.json` in project root or `.vscode/mcp.json`
 - **Claude Desktop:** `~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 
-### 3. Verify Setup
+### 4. Verify Setup
 
 Check that the MCP server appears in your MCP client:
 - In VS Code: Check the MCP panel/output
 - In Cursor: Settings → MCP Servers
 - In Claude Desktop: Check logs
 
-### 4. Use the Tool
+### 5. Use the Tool
 
 Once configured and loaded, use the `download_figma_images` tool:
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Express Server Entry Point
  * Sets up HTTP server with health check and MCP stdio transport
