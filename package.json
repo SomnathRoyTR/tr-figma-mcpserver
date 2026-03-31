@@ -1,5 +1,5 @@
 {
-  "name": "@somnathroy/tr-figma-mcpserver",
+  "name": "@somnathroytr/tr-figma-mcpserver",
   "version": "1.0.0",
   "description": "MCP server for downloading Figma images using access tokens",
   "main": "dist/index.js",
