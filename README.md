@@ -16,7 +16,28 @@ The easiest way to use tr-figma-mcpserver is through our hosted Azure deployment
 
 ### 2. Configure Your MCP Client
 
-Add this to your MCP client configuration:
+**Method 1: Local Stdio (Recommended)**
+
+Create `.mcp.json` in your project root or VS Code workspace:
+
+```json
+{
+  "mcpServers": {
+    "tr-figma-mcpserver": {
+      "command": "node",
+      "args": ["C:/Users/YOUR_USERNAME/path/to/tr-figma-mcpserver/dist/index.js"],
+      "env": {
+        "MCP_STDIO": "true",
+        "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+**Replace the path** with the absolute path to where you have tr-figma-mcpserver installed.
+
+**Method 2: Hosted SSE (Experimental - Not Yet Supported by Most Clients)**
 
 ```json
 {
@@ -32,14 +53,22 @@ Add this to your MCP client configuration:
 }
 ```
 
+*Note: SSE transport support varies by MCP client. Use Method 1 for guaranteed compatibility.*
+
 **Configuration Locations:**
-- **Claude Desktop:** `~/Library/Application Support/Claude/config.json` (Mac) or `%APPDATA%\Claude\config.json` (Windows)
-- **VS Code:** `.vscode/mcp.json` in your project
-- **Cursor:** Settings → MCP Servers
+- **VS Code / Cursor:** `.mcp.json` in project root or `.vscode/mcp.json`
+- **Claude Desktop:** `~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 
-### 3. Use the Tool
+### 3. Verify Setup
 
-Once configured, just provide your Figma URL! The token is already set in your config.
+Check that the MCP server appears in your MCP client:
+- In VS Code: Check the MCP panel/output
+- In Cursor: Settings → MCP Servers
+- In Claude Desktop: Check logs
+
+### 4. Use the Tool
+
+Once configured and loaded, use the `download_figma_images` tool:
 
 **Basic usage:**
 ```json
@@ -57,7 +86,7 @@ Once configured, just provide your Figma URL! The token is already set in your c
 }
 ```
 
-That's it! No need to pass the token in every request since it's configured once in your MCP client settings.
+**That's it!** No need to pass the token in every request since it's configured in your MCP client settings.
 
 ---
 
