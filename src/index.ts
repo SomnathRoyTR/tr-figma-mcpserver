@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 // Health check endpoint (Azure uses this to verify app is running)
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     status: 'healthy',
     service: 'tr-figma-mcpserver',
@@ -26,7 +26,7 @@ app.get('/health', (req, res) => {
 });
 
 // Root endpoint
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
     name: 'tr-figma-mcpserver',
     version: '1.0.0',

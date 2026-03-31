@@ -3,7 +3,7 @@
  * Handles authentication, URL parsing, and API calls to Figma
  */
 
-import type { ParsedFigmaUrl, FigmaImagesResponse, FigmaError } from '../types/figma.js';
+import type { ParsedFigmaUrl, FigmaImagesResponse } from '../types/figma.js';
 
 export class FigmaApiService {
   private readonly baseUrl: string;
@@ -95,7 +95,7 @@ export class FigmaApiService {
         await this.handleErrorResponse(response);
       }
 
-      const data: FigmaImagesResponse = await response.json();
+      const data = await response.json() as FigmaImagesResponse;
 
       if (data.err) {
         throw new Error(`Figma API error: ${data.err}`);
@@ -137,15 +137,13 @@ export class FigmaApiService {
     let errorMessage = 'Figma API request failed';
 
     try {
-      const data = await response.json();
+      const data = await response.json() as { err?: string };
       if (data.err) {
         errorMessage = data.err;
       }
     } catch {
       errorMessage = await response.text() || errorMessage;
     }
-
-    const error: FigmaError = { status, err: errorMessage };
 
     switch (status) {
       case 401:
