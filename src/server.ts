@@ -37,7 +37,7 @@ export function createMCPServer(): Server {
           properties: {
             figmaAccessToken: {
               type: 'string',
-              description: 'Figma personal access token (get from https://www.figma.com/settings)',
+              description: 'Figma personal access token (optional if FIGMA_ACCESS_TOKEN env var is set). Get from https://www.figma.com/settings',
             },
             figmaUrl: {
               type: 'string',

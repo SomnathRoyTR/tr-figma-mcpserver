@@ -2,21 +2,9 @@
 
 Hosted MCP (Model Context Protocol) server for downloading Figma images using access tokens.
 
-## Overview
+## Quick Start - Using the Hosted Service
 
-`tr-figma-mcpserver` is a hosted service that enables AI assistants and MCP clients to download images from Figma designs programmatically. No installation required - just configure the endpoint URL in your MCP client settings.
-
-### Features
-
-- Download images from Figma files using access tokens
-- Supports both `/file/` and `/design/` URL formats
-- Handles `node-id` parameter conversion (hyphen to colon format)
-- Multiple export formats: PNG, JPG, SVG, PDF
-- Configurable scale factor for raster images
-- Base64-encoded responses for easy integration
-- Hosted on Azure Web App with automatic deployments
-
-## Quick Start
+The easiest way to use tr-figma-mcpserver is through our hosted Azure deployment. No installation required!
 
 ### 1. Get Your Figma Access Token
 
@@ -26,34 +14,32 @@ Hosted MCP (Model Context Protocol) server for downloading Figma images using ac
 4. Give it a name (e.g., "MCP Server")
 5. Copy the token (format: `figd_...`)
 
-### 2. Configure MCP Client
+### 2. Configure Your MCP Client
 
-Add the server to your MCP client configuration:
-
-**VS Code** (`.vscode/mcp.json`):
+**For Claude Desktop:**
 ```json
 {
   "mcpServers": {
     "tr-figma-mcpserver": {
       "command": "node",
-      "args": ["/path/to/tr-figma-mcpserver/dist/index.js"],
+      "args": ["-e", "require('child_process').spawn('npx', ['-y', '@modelcontextprotocol/client', 'https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/mcp'])"],
       "env": {
-        "MCP_STDIO": "true"
+        "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
       }
     }
   }
 }
 ```
 
-**Claude Desktop** (config file location varies by OS):
+**For VS Code MCP Extension:**
 ```json
 {
   "mcpServers": {
     "tr-figma-mcpserver": {
       "command": "node",
-      "args": ["/path/to/tr-figma-mcpserver/dist/index.js"],
+      "args": ["-e", "require('child_process').spawn('npx', ['-y', '@modelcontextprotocol/client', 'https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/mcp'])"],
       "env": {
-        "MCP_STDIO": "true"
+        "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
       }
     }
   }
@@ -62,19 +48,45 @@ Add the server to your MCP client configuration:
 
 ### 3. Use the Tool
 
-Call the `download_figma_images` tool from your MCP client:
+Once configured, you can use the `download_figma_images` tool:
 
-```typescript
+**Simple usage (token from environment):**
+```json
 {
   "name": "download_figma_images",
   "arguments": {
-    "figmaAccessToken": "figd_YOUR_TOKEN_HERE",
-    "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474",
-    "format": "png",
-    "scale": 2
+    "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474"
   }
 }
 ```
+
+**With all options:**
+```json
+{
+  "name": "download_figma_images",
+  "arguments": {
+    "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474",
+    "format": "png",
+    "scale": 2,
+    "figmaAccessToken": "figd_YOUR_TOKEN_HERE"
+  }
+}
+```
+
+**Note:** If you set `FIGMA_ACCESS_TOKEN` in your MCP client configuration, you don't need to provide `figmaAccessToken` in each request.
+
+---
+
+## Features
+
+- ✅ Download images from Figma files using access tokens
+- ✅ Supports both `/file/` and `/design/` URL formats
+- ✅ Automatic `node-id` parameter conversion (hyphen to colon format)
+- ✅ Multiple export formats: PNG, JPG, SVG, PDF
+- ✅ Configurable scale factor for raster images (0.01 to 4)
+- ✅ Base64-encoded responses for easy integration
+- ✅ Hosted on Azure Web App - no installation required
+- ✅ Configure token once, use everywhere
 
 ## Supported URL Formats
 
@@ -89,6 +101,12 @@ The server automatically converts node IDs from URL format to API format:
 - URL format: `node-id=29302-167474` (hyphen separator)
 - API format: `29302:167474` (colon separator)
 
+**Example:**
+- Input: `https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474`
+- Parsed: File ID `WJNNpEsralNcSMptsFbFH9`, Node ID `29302:167474`
+
+---
+
 ## API Reference
 
 ### Tool: `download_figma_images`
@@ -99,15 +117,15 @@ Downloads images from Figma designs and returns them as Base64-encoded resources
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `figmaAccessToken` | string | Yes | - | Figma personal access token |
+| `figmaAccessToken` | string | No* | - | Figma personal access token (*required if not set in environment) |
 | `figmaUrl` | string | Yes | - | Figma file URL (supports /file/ and /design/ paths) |
-| `nodeIds` | string[] | No | From URL | Specific node IDs to export |
+| `nodeIds` | string[] | No | From URL | Specific node IDs to export (uses node-id from URL if not provided) |
 | `format` | enum | No | 'png' | Export format: `png`, `jpg`, `svg`, `pdf` |
 | `scale` | number | No | 1 | Scale factor for raster images (0.01 to 4) |
 
 #### Response
 
-```typescript
+```json
 {
   "content": [
     {
@@ -126,57 +144,29 @@ Downloads images from Figma designs and returns them as Base64-encoded resources
 }
 ```
 
+---
+
 ## Error Handling
 
 The server returns helpful error messages for common issues:
 
-- **401 Unauthorized**: Invalid or expired Figma access token
-- **403 Forbidden**: No access to the Figma file
-- **404 Not Found**: File or node doesn't exist
-- **429 Rate Limited**: Too many requests to Figma API
-- **Invalid URL**: URL doesn't match expected Figma format
-- **No node IDs**: Neither nodeIds parameter nor node-id in URL provided
+| Error | Description | Solution |
+|-------|-------------|----------|
+| **401 Unauthorized** | Invalid or expired Figma access token | Get a new token from https://www.figma.com/settings |
+| **403 Forbidden** | No access to the Figma file | Check file permissions or use a different token |
+| **404 Not Found** | File or node doesn't exist | Verify the Figma URL is correct |
+| **429 Rate Limited** | Too many requests to Figma API | Wait a moment and try again |
+| **Invalid URL** | URL doesn't match expected format | Use format: `figma.com/design/{fileId}/...` |
+| **No token** | Neither parameter nor env var provided | Set FIGMA_ACCESS_TOKEN or provide in request |
 
-## Local Development
+---
 
-### Prerequisites
+## Health Check
 
-- Node.js 18+ installed
-- npm or yarn package manager
+Verify the service is running:
 
-### Setup
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/your-org/tr-figma-mcpserver.git
-cd tr-figma-mcpserver
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Build TypeScript:
-```bash
-npm run build
-```
-
-4. Run development server:
-```bash
-npm run dev
-```
-
-5. Run in MCP stdio mode:
-```bash
-MCP_STDIO=true npm start
-```
-
-### Testing
-
-Test the health endpoint:
-```bash
-curl http://localhost:3000/health
+curl https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/health
 ```
 
 Expected response:
@@ -189,81 +179,191 @@ Expected response:
 }
 ```
 
-## Deployment
-
-### Azure Web App Deployment
-
-The server is configured for automatic deployment to Azure Web App via GitHub Actions.
-
-#### Setup Steps
-
-1. **Create Azure Web App**:
-   - Go to Azure Portal → Create Web App
-   - Name: `tr-figma-mcpserver`
-   - Runtime: Node 18 LTS
-   - Region: Choose based on your location
-
-2. **Download Publish Profile**:
-   - In Azure Portal → Web App → Download publish profile
-   - Save the `.PublishSettings` file
-
-3. **Configure GitHub Secret**:
-   - GitHub repo → Settings → Secrets and variables → Actions
-   - New secret: `AZURE_WEBAPP_PUBLISH_PROFILE`
-   - Paste the contents of the publish profile
-
-4. **Deploy**:
-   - Push to main branch
-   - GitHub Actions will automatically build and deploy
-   - Monitor progress in Actions tab
-
-#### Post-Deployment
-
-- Health check: `https://tr-figma-mcpserver.azurewebsites.net/health`
-- Service runs automatically with HTTPS enabled
+---
 
 ## Security
 
 ### Token Handling
 
-- **Server does NOT store tokens**: Tokens are passed per-request and used immediately
+- **Server does NOT store tokens**: Tokens are passed per-request or via environment variables
 - **No logging**: Tokens are never logged or persisted
 - **User responsibility**: Users secure their own Figma tokens
-- **HTTPS required**: All communication encrypted in transit (provided by Azure)
+- **HTTPS required**: All communication encrypted in transit (Azure provides SSL/TLS)
 
 ### Best Practices
 
-1. Never commit tokens to git repositories
-2. Rotate tokens regularly
-3. Use separate tokens for different services
-4. Revoke tokens if compromised
-5. Only share tokens with trusted MCP clients
+1. ✅ Never commit tokens to git repositories
+2. ✅ Store tokens in environment variables or secure configuration
+3. ✅ Rotate tokens regularly
+4. ✅ Use separate tokens for different services
+5. ✅ Revoke tokens immediately if compromised
+6. ✅ Only share tokens with trusted MCP clients
+
+---
 
 ## Troubleshooting
 
-### "Unauthorized: Invalid or expired Figma access token"
+### "No token provided"
 
-- Verify your token is correct (starts with `figd_`)
+**Problem:** Neither `figmaAccessToken` parameter nor `FIGMA_ACCESS_TOKEN` environment variable is set.
+
+**Solution:** 
+- Add token to your MCP client config's `env` section, OR
+- Provide `figmaAccessToken` in each request
+
+### "Unauthorized: Invalid or expired token"
+
+**Problem:** Your Figma token is incorrect or has expired.
+
+**Solution:**
+- Verify token format (should start with `figd_`)
 - Check if token was revoked in Figma settings
-- Generate a new token if needed
+- Generate a new token at https://www.figma.com/settings
 
 ### "Invalid Figma URL format"
 
+**Problem:** URL doesn't match expected Figma format.
+
+**Solution:**
 - Ensure URL starts with `https://www.figma.com/`
 - URL must contain `/file/` or `/design/` path
-- Check for typos in the URL
+- Example: `https://www.figma.com/design/{fileId}/{name}?node-id=123-456`
 
 ### "No node IDs specified"
 
-- Either provide `nodeIds` parameter
-- Or include `node-id=123-456` in the Figma URL
-- At least one node ID is required
+**Problem:** Neither `nodeIds` parameter nor `node-id` in URL provided.
+
+**Solution:**
+- Add `nodeIds` parameter: `["123:456", "789:012"]`, OR
+- Include `node-id` in URL: `?node-id=123-456`
 
 ### "Failed to download image"
 
+**Problem:** Network issue or Figma API error.
+
+**Solution:**
 - Check your internet connection
 - Verify the node exists in the Figma file
 - Try a smaller scale factor for large images
+- Wait a moment if rate limited
+
+---
+
+## Development & Local Setup
+
+Want to run the server locally or contribute to development?
+
+### Prerequisites
+
+- Node.js 22+ installed
+- npm or yarn package manager
+- Git
+
+### Local Installation
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/your-org/tr-figma-mcpserver.git
+cd tr-figma-mcpserver
+```
+
+2. **Install dependencies:**
+```bash
+npm install
+```
+
+3. **Build TypeScript:**
+```bash
+npm run build
+```
+
+4. **Run locally:**
+```bash
+npm run dev
+```
+
+### Local MCP Configuration
+
+To use your local instance instead of the hosted one:
+
+```json
+{
+  "mcpServers": {
+    "tr-figma-mcpserver": {
+      "command": "node",
+      "args": ["C:/path/to/tr-figma-mcpserver/dist/index.js"],
+      "env": {
+        "MCP_STDIO": "true",
+        "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+### Testing Locally
+
+Test the health endpoint:
+```bash
+curl http://localhost:3000/health
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "service": "tr-figma-mcpserver",
+  "version": "1.0.0",
+  "timestamp": "..."
+}
+```
+
+### Project Structure
+
+```
+tr-figma-mcpserver/
+├── src/
+│   ├── index.ts              # Express server + SSE/stdio transports
+│   ├── server.ts             # MCP server factory
+│   ├── tools/
+│   │   └── download-image.ts # Tool implementation
+│   ├── services/
+│   │   ├── figma-api.ts      # Figma API client
+│   │   └── image-processor.ts# Image download & encoding
+│   └── types/
+│       └── figma.ts          # TypeScript type definitions
+├── dist/                     # Compiled JavaScript (generated)
+├── package.json              # Dependencies and scripts
+├── tsconfig.json             # TypeScript configuration
+└── README.md                 # This file
+```
+
+---
+
+## Deployment
+
+The server is deployed to Azure Web App with automatic GitHub Actions CI/CD.
+
+### Deployment URL
+**Live:** https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net
+
+### Endpoints
+- **Health Check:** `/health`
+- **MCP SSE:** `/mcp`
+- **Info:** `/`
+
+### GitHub Actions
+
+Every push to `main` or `master` branch triggers automatic deployment:
+1. Install dependencies
+2. Build TypeScript
+3. Run type checking
+4. Deploy to Azure Web App
+5. Verify deployment with health check
+
+Monitor deployments at: [GitHub Actions](https://github.com/your-org/tr-figma-mcpserver/actions)
+
+---
 
 ## Contributing
 
@@ -275,15 +375,22 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+---
+
 ## License
 
 MIT License - see LICENSE file for details
 
+---
+
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/your-org/tr-figma-mcpserver/issues)
-- Documentation: [MCP Documentation](https://modelcontextprotocol.io)
-- Figma API: [Figma Developer Docs](https://www.figma.com/developers/api)
+- **Issues:** [GitHub Issues](https://github.com/your-org/tr-figma-mcpserver/issues)
+- **MCP Documentation:** [Model Context Protocol](https://modelcontextprotocol.io)
+- **Figma API:** [Figma Developer Docs](https://www.figma.com/developers/api)
+- **Service Status:** https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/health
+
+---
 
 ## Acknowledgments
 
@@ -293,4 +400,6 @@ MIT License - see LICENSE file for details
 
 ---
 
-Made with ❤️ by Thomson Reuters
+**Made with ❤️ by Thomson Reuters**
+
+**Live Service:** https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net

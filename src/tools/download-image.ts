@@ -11,8 +11,8 @@ import { ImageProcessorService } from '../services/image-processor.js';
  * Input schema for download_figma_images tool
  */
 export const DownloadImageSchema = z.object({
-  figmaAccessToken: z.string().describe(
-    'Figma personal access token (get from https://www.figma.com/settings)'
+  figmaAccessToken: z.string().optional().describe(
+    'Figma personal access token (optional if FIGMA_ACCESS_TOKEN env var is set). Get from https://www.figma.com/settings'
   ),
   figmaUrl: z.string().describe(
     'Figma file URL (supports /file/ and /design/ paths)'
@@ -37,8 +37,23 @@ export async function downloadFigmaImages(input: DownloadImageInput) {
   const { figmaAccessToken, figmaUrl, nodeIds, format, scale } = input;
 
   try {
+    // Get token from parameter or environment variable
+    const token = figmaAccessToken || process.env.FIGMA_ACCESS_TOKEN;
+
+    if (!token) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Error: Figma access token is required. Either provide figmaAccessToken parameter or set FIGMA_ACCESS_TOKEN environment variable. Get your token at https://www.figma.com/settings',
+          },
+        ],
+        isError: true,
+      };
+    }
+
     // Initialize services
-    const figmaApi = new FigmaApiService(figmaAccessToken);
+    const figmaApi = new FigmaApiService(token);
     const imageProcessor = new ImageProcessorService();
 
     // Parse Figma URL
