@@ -16,13 +16,14 @@ The easiest way to use tr-figma-mcpserver is through our hosted Azure deployment
 
 ### 2. Configure Your MCP Client
 
-**For Claude Desktop:**
+Add this to your MCP client configuration:
+
 ```json
 {
   "mcpServers": {
     "tr-figma-mcpserver": {
-      "command": "node",
-      "args": ["-e", "require('child_process').spawn('npx', ['-y', '@modelcontextprotocol/client', 'https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/mcp'])"],
+      "url": "https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/mcp",
+      "transport": "sse",
       "env": {
         "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
       }
@@ -31,49 +32,32 @@ The easiest way to use tr-figma-mcpserver is through our hosted Azure deployment
 }
 ```
 
-**For VS Code MCP Extension:**
-```json
-{
-  "mcpServers": {
-    "tr-figma-mcpserver": {
-      "command": "node",
-      "args": ["-e", "require('child_process').spawn('npx', ['-y', '@modelcontextprotocol/client', 'https://tr-figma-mcpserver-gsakbybcgegzdkc4.centralus-01.azurewebsites.net/mcp'])"],
-      "env": {
-        "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
-      }
-    }
-  }
-}
-```
+**Configuration Locations:**
+- **Claude Desktop:** `~/Library/Application Support/Claude/config.json` (Mac) or `%APPDATA%\Claude\config.json` (Windows)
+- **VS Code:** `.vscode/mcp.json` in your project
+- **Cursor:** Settings → MCP Servers
 
 ### 3. Use the Tool
 
-Once configured, you can use the `download_figma_images` tool:
+Once configured, just provide your Figma URL! The token is already set in your config.
 
-**Simple usage (token from environment):**
+**Basic usage:**
 ```json
 {
-  "name": "download_figma_images",
-  "arguments": {
-    "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474"
-  }
+  "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474"
 }
 ```
 
-**With all options:**
+**With options:**
 ```json
 {
-  "name": "download_figma_images",
-  "arguments": {
-    "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474",
-    "format": "png",
-    "scale": 2,
-    "figmaAccessToken": "figd_YOUR_TOKEN_HERE"
-  }
+  "figmaUrl": "https://www.figma.com/design/WJNNpEsralNcSMptsFbFH9/LT-Matters-page?node-id=29302-167474",
+  "format": "png",
+  "scale": 2
 }
 ```
 
-**Note:** If you set `FIGMA_ACCESS_TOKEN` in your MCP client configuration, you don't need to provide `figmaAccessToken` in each request.
+That's it! No need to pass the token in every request since it's configured once in your MCP client settings.
 
 ---
 
