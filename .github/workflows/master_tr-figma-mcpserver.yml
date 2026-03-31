@@ -52,4 +52,4 @@ jobs:
           app-name: 'tr-figma-mcpserver'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_55AEF21DE6674DC6BF79CCAD09E2A662 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FA6C614114504BE5B189E8683A420B8B }}
